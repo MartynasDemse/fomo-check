@@ -48,3 +48,9 @@ prekiautojo sandorių dažnis ir kaštai. Pakeitęs nusprendi pats, ar sąlygos 
 - Jei Yahoo Finance kurią dieną neatsako, skriptas nieko nekeičia ir palieka vakarykštį puslapį.
 - GitHub gali sustabdyti suplanuotus workflow neaktyviose repozitorijose. Jei gausi tokį laišką, įjunk vienu mygtuku *Actions* skiltyje.
 - Tai istorinis modelis, ne investavimo rekomendacija.
+
+## Trendo filtro testas (`backtest/`)
+
+Vienkartinis istorinis testas „Trendo filtras v1“ (70 % pasaulio akcijos, 20 % BTC, 10 % ETH, 200 d. vidurkio filtras).
+Paleidimas: *Actions → Trendo filtro testas → Run workflow*. Po ~2 min. aplanke `backtest/` atsiras
+`trend_backtest_report.txt`, `trend_backtest_curves.csv` ir `trend_backtest.png`.
