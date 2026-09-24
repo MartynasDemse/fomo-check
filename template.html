@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ar verta prekiauti? Kasdienis patikrinimas</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F3; --sheet:#F8FAFB; --ink:#18232E; --muted:#5B6873; --rule:#C9D1D8;
+  --dca:#1E6B52; --etf:#7C9A8C; --btc:#B7791F; --trend:#3E5F8A; --trader:#A33B45; --band:rgba(163,59,69,.14);
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#141A20;--sheet:#1B232B;--ink:#E3E8EC;--muted:#98A5B0;--rule:#34404B;
+        --dca:#4FB38E;--etf:#8FB0A1;--btc:#E0A450;--trend:#7FA2D6;--trader:#E0707B;--band:rgba(224,112,123,.16)}
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 var(--sans);font-variant-numeric:tabular-nums}
+main{max-width:760px;margin:0 auto;padding:40px 20px 64px}
+h1,h2{font-family:var(--serif);font-weight:500;line-height:1.15;margin:0}
+h1{font-size:clamp(30px,6vw,46px);letter-spacing:-.01em;max-width:18ch}
+h2{font-size:24px;margin:56px 0 12px}
+p{margin:0 0 12px;max-width:68ch}
+.meta{color:var(--muted);font-size:14px;margin-bottom:20px}
+.lede{font-size:18px;margin-top:18px;color:var(--ink)}
+.warn{background:var(--sheet);border-left:3px solid var(--btc);padding:10px 14px;margin:16px 0;font-size:14px}
+.chart-box{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:16px;margin-top:24px}
+.chart-wrap{position:relative;height:340px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin-top:12px}
+.legend span::before{content:"";display:inline-block;width:14px;height:3px;border-radius:2px;background:var(--c);vertical-align:middle;margin-right:6px}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15px}
+th,td{text-align:right;padding:10px 8px;border-bottom:1px solid var(--rule);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-weight:500;color:var(--muted);font-size:13px}
+td small{display:block;color:var(--muted);font-size:12px}
+tr.best td:first-child{box-shadow:inset 3px 0 0 var(--dca);padding-left:12px}
+.neg{color:var(--trader)} .pos{color:var(--dca)}
+details{margin-top:16px;border-top:1px solid var(--rule);padding-top:12px}
+summary{cursor:pointer;font-weight:500}
+details p,details li{font-size:15px;color:var(--muted)}
+.calc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+.calc label{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.calc input{font:inherit;padding:8px 10px;border:1px solid var(--rule);border-radius:4px;background:var(--sheet);color:var(--ink);width:100%}
+.calc-out{margin-top:16px;font-family:var(--serif);font-size:20px;line-height:1.4;max-width:60ch}
+.hype{list-style:none;padding:0;margin:12px 0 0}
+.hype li{border-top:1px solid var(--rule);padding:14px 0}
+.hype .v{font-weight:600}
+.hype .v.bad{color:var(--trader)} .hype .v.ok{color:var(--dca)}
+.hype .src{color:var(--muted);font-size:13px}
+.studies li{margin-bottom:10px;max-width:68ch}
+footer{margin-top:64px;color:var(--muted);font-size:13px;border-top:1px solid var(--rule);padding-top:16px}
+:focus-visible{outline:2px solid var(--trend);outline-offset:2px}
+@media (max-width:560px){.calc{grid-template-columns:1fr}.chart-wrap{height:280px}main{padding-top:28px}}
+</style>
+</head>
+<body>
+<main>
+  <p class="meta" id="meta"></p>
+  <h1 id="hero"></h1>
+  <p class="lede" id="lede"></p>
+  <div id="warn"></div>
+
+  <div class="chart-box">
+    <div class="chart-wrap"><canvas id="chart" aria-label="Portfelių vertės grafikas"></canvas></div>
+    <div class="legend">
+      <span style="--c:var(--dca)">DCA 80/20</span>
+      <span style="--c:var(--etf)">DCA tik ETF</span>
+      <span style="--c:var(--btc)">DCA tik BTC</span>
+      <span style="--c:var(--trend)">Trendo filtras</span>
+      <span style="--c:var(--trader)">Prekiautojas: mediana ir 10–90 % ruožas</span>
+      <span style="--c:var(--muted)">Įnešta suma</span>
+    </div>
+  </div>
+
+  <h2>Kiek liko iš tų pačių pinigų</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Strategija</th><th>Vertė</th><th>Pelnas</th><th>Metinė grąža</th><th>Didžiausias kritimas</th><th>Sandoriai</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+  <details>
+    <summary>Kaip tai suskaičiuota</summary>
+    <p id="method"></p>
+    <ul>
+      <li>Prekiautojas kasdien su tam tikra tikimybe perka arba parduoda BTC. Jis nėra blogesnis už monetos metimą: nepanikuoja, nevaiko nuostolių. Tai dosni prielaida jo naudai.</li>
+      <li>Metinė grąža ir didžiausias kritimas skaičiuojami kaip fondo vieneto (TWR), kad mėnesinės įmokos neiškraipytų rezultato.</li>
+      <li>Mokesčiai valstybei ir EUR/USD kursas neįtraukti. Tai istorinis modelis, ne prognozė.</li>
+    </ul>
+  </details>
+
+  <h2>Pamatei stebuklą? Įvesk jo skaičius</h2>
+  <p>Pvz., „per naktį iš 54 $ padariau 16 230 $“.</p>
+  <div class="calc">
+    <label>Pradžia<input id="c-start" type="number" inputmode="decimal" value="54" min="0.01" step="any"></label>
+    <label>Pabaiga<input id="c-end" type="number" inputmode="decimal" value="16230" min="0.01" step="any"></label>
+    <label>Per kiek valandų<input id="c-hours" type="number" inputmode="decimal" value="12" min="0.1" step="any"></label>
+  </div>
+  <p class="calc-out" id="calc-out" aria-live="polite"></p>
+
+  <h2>Mano hype žurnalas</h2>
+  <p>Teiginiai, kuriuos patikrinau. Naujus pridėk faile <code>hype.json</code>.</p>
+  <ul class="hype" id="hype"></ul>
+
+  <h2>Ką rodo tyrimai</h2>
+  <ul class="studies">
+    <li><strong>Barber ir Odean (2000)</strong>, 66 000 JAV namų ūkių: daugiausiai prekiavę investuotojai uždirbo apie 11,4 % per metus, kai rinka davė 17,9 %. Skirtumą suvalgė kaštai ir prasti sprendimai.</li>
+    <li><strong>Barber, Lee, Liu ir Odean</strong>, Taivano dienos prekiautojai: pastoviai pelningų po kaštų buvo mažiau nei 1 %.</li>
+    <li><strong>Chague, De-Losso ir Giovannetti (2019)</strong>, Brazilijos ateities sandorių dienos prekiautojai: iš prekiavusių ilgiau nei 300 dienų 97 % prarado pinigus.</li>
+  </ul>
+
+  <footer id="foot"></footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const D = __DATA__;
+const eur = v => new Intl.NumberFormat("lt-LT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(v);
+const pct = (v,d=0) => (v==null?"—":new Intl.NumberFormat("lt-LT",{style:"percent",maximumFractionDigits:d,minimumFractionDigits:d,signDisplay:"exceptZero"}).format(v));
+const num = (v,d=1) => new Intl.NumberFormat("lt-LT",{maximumFractionDigits:d}).format(v);
+const $ = id => document.getElementById(id);
+
+const T = D.trader, P = D.params;
+const beat = Math.round(T.beat_btc*100);
+$("meta").textContent = `Duomenys iki ${D.data_until}, atnaujinta ${D.updated}`;
+$("hero").textContent = `Aktyvus prekiautojas aplenkė paprastą BTC kaupimą ${beat} kartų iš 100.`;
+$("lede").textContent = `Nuo ${D.start} (${num(D.years)} m.) kas mėnesį po ${eur(P.monthly)}, iš viso ${eur(D.invested)}. ` +
+  `Paprastas DCA 80/20 dabar turi ${eur(D.table[0].value)}, o tipinis prekiautojas — ${eur(T.p50)}.`;
+if ((D.sources||{}).warning) $("warn").innerHTML = `<p class="warn">${D.sources.warning}. Skaičiai gali būti netikslūs.</p>`;
+if (D.synthetic) $("warn").innerHTML = '<p class="warn">Testiniai atsitiktiniai duomenys. Tikri skaičiai atsiras po pirmo GitHub paleidimo.</p>';
+
+const best = Math.max(...D.table.map(r=>r.value));
+$("rows").innerHTML = D.table.map(r=>`<tr class="${r.value===best?'best':''}">
+  <td>${r.name}${r.note?`<small>${r.note}</small>`:""}</td>
+  <td>${eur(r.value)}</td>
+  <td class="${r.gain<0?'neg':'pos'}">${pct(r.gain)}</td>
+  <td>${pct(r.cagr,1)}</td>
+  <td>${pct(r.maxdd)}</td>
+  <td>${r.trades}</td></tr>`).join("");
+
+const S = D.sources||{};
+$("method").textContent = `Visos strategijos gauna tą pačią sumą pirmą mėnesio dieną. Kainos: ETF — ${S.etf||P.etf}; BTC — ${S.btc||P.btc}. ` +
+  `Prekiautojas: ${P.paths} atsitiktinių scenarijų, vidutiniškai ${num(P.switches_per_month)} sandorių per mėnesį, ` +
+  `po ${num(P.trader_cost*100,2)} % kaštų už sandorį. 10–90 % scenarijų baigėsi tarp ${eur(T.p10)} ir ${eur(T.p90)}. ` +
+  `DCA 80/20 jis aplenkė ${Math.round(T.beat_mix*100)} kartų iš 100.`;
+
+// grafikas
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function draw(){
+  if(!window.Chart){ $("chart").replaceWith(Object.assign(document.createElement("p"),{textContent:"Grafiko biblioteka neįsikėlė. Skaičiai lentelėje žemiau."})); return; }
+  const C = D.chart, line = (label,data,color,extra={}) => ({label,data,borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:0,tension:.15,...extra});
+  new Chart($("chart"),{type:"line",
+    data:{labels:C.dates,datasets:[
+      line("Prekiautojas 90 %",C.trader_p90,"transparent",{fill:"+1",backgroundColor:css("--band"),borderWidth:0}),
+      line("Prekiautojas 10 %",C.trader_p10,"transparent",{borderWidth:0}),
+      line("Prekiautojas (mediana)",C.trader_p50,css("--trader"),{borderDash:[5,4]}),
+      line("DCA tik BTC",C.dca_btc,css("--btc"),{borderWidth:1.5}),
+      line("DCA tik ETF",C.dca_etf,css("--etf"),{borderWidth:1.5}),
+      line("Trendo filtras",C.trend,css("--trend"),{borderWidth:1.5}),
+      line("DCA 80/20",C.dca_mix,css("--dca"),{borderWidth:3}),
+      line("Įnešta",C.invested,css("--muted"),{borderWidth:1,borderDash:[2,3]}),
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      scales:{x:{ticks:{color:css("--muted"),maxTicksLimit:7,callback:function(v){return this.getLabelForValue(v).slice(0,7)}},grid:{display:false}},
+              y:{ticks:{color:css("--muted"),callback:v=>eur(v)},grid:{color:css("--rule")}}}}});
+}
+draw();
+
+// skaiciuokle
+function calc(){
+  const s=+$("c-start").value, e=+$("c-end").value, h=+$("c-hours").value, out=$("calc-out");
+  if(!(s>0&&e>0&&h>0)){ out.textContent="Įvesk teigiamus skaičius visuose trijuose laukuose."; return; }
+  const m=e/s, perH=Math.pow(m,1/h)-1;
+  const mixTwr=D.table[0].twr;
+  const digits=Math.floor((720/h)*Math.log10(m)+Math.log10(s))+1;
+  let t=`Tai ×${num(m,0)} per ${num(h)} val., arba ${pct(perH,1)} kas valandą. `+
+    `Palyginimui: DCA 80/20 vienetas per ${num(D.years)} m. išaugo ×${num(mixTwr,2)}. `;
+  t += m>1 ? (digits>15
+      ? `Jei toks tempas būtų pakartojamas, po 30 dienų suma turėtų ${num(digits,0)} skaitmenis. Tai daugiau nei visi pasaulio pinigai (~15 skaitmenų).`
+      : `Jei toks tempas būtų pakartojamas, po 30 dienų suma turėtų ${num(digits,0)} skaitmenis.`) : "";
+  out.textContent=t;
+}
+["c-start","c-end","c-hours"].forEach(id=>$(id).addEventListener("input",calc)); calc();
+
+// hype zurnalas
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+$("hype").innerHTML = (D.hype||[]).slice().reverse().map(h=>{
+  const cls=/paneigt|klaid|apgaul/i.test(h.verdiktas)?"bad":/patvirtint/i.test(h.verdiktas)?"ok":"";
+  return `<li><div><span class="v ${cls}">${esc(h.verdiktas)}</span>. ${esc(h.teiginys)}</div>
+    <div class="src">${esc(h.data)}, ${esc(h.saltinis)}</div>${h.pastaba?`<p>${esc(h.pastaba)}</p>`:""}</li>`;}).join("")
+  || "<li>Kol kas tuščia. Pridėk pirmą įrašą faile hype.json.</li>";
+
+$("foot").textContent = "Hipotetinis istorinis modelis asmeniniam naudojimui. Ne investavimo rekomendacija; praeities rezultatai negarantuoja ateities.";
+</script>
+</body>
+</html>

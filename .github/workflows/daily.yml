@@ -1,0 +1,27 @@
+name: Kasdienis atnaujinimas
+
+on:
+  schedule:
+    - cron: "30 5 * * *"   # kasdien 05:30 UTC (08:30 Vilniaus laiku)
+  workflow_dispatch:        # galima paleisti rankiniu budu is Actions skilties
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python fomo_check.py
+      - name: Issaugoti atnaujinta puslapi
+        run: |
+          git config user.name "fomo-check-bot"
+          git config user.email "fomo-check-bot@users.noreply.github.com"
+          git add docs
+          git diff --cached --quiet || git commit -m "Atnaujinta $(date -u +%F)"
+          git push
